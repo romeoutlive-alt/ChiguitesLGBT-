@@ -5,6 +5,23 @@ window.sedeClasificar = (() => {
  const has=(s,r)=>r.test(s);
  const stage=s=>has(s,/justificaci|memoria justificativa/)?'justificacion':has(s,/resolucion|aceptacion|concesion|anticipo/)?'resolucion':has(s,/convocatoria|\bbases\b/)?'convocatoria':has(s,/solicitud|\banexos?\b/)?'solicitud':null;
  function isActa(name){const s=norm(name);return /(?:^|[^a-z])(actas?|reunion(?:es)?)(?=$|[^a-z])/.test(s)}
+ // Fechas reconocibles en nombre/ruta, no fechas de subida ni contenido.
+ function invoice(path){
+  if(!Array.isArray(path)||!path.length||isActa(path.at(-1)))return null;
+  const parts=path.map(norm);if(!parts.some(x=>/(?:^|[^a-z])facturas?(?=$|[^a-z])/.test(x)))return null;
+  let year=null,yearPart=-1;
+  for(let i=parts.length-1;i>=0;i--){const years=[...new Set((parts[i].match(/(?<![0-9])(?:19|20)\d{2}(?![0-9])/g)||[]).map(Number))];if(years.length>1)return {year:null,month:null};if(years.length===1){year=years[0];yearPart=i;break}}
+  if(year!==null&&(year<1900||year>2026))return null;
+  if(year!==2026)return {year,month:null};
+  const names=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  function months(s){const result=new Set();for(let i=0;i<names.length;i++)if(new RegExp('(?:^|[^a-z])'+names[i]+'(?=$|[^a-z])').test(s))result.add(i+1);
+   const iso=/(?<!\d)(20\d{2})[-_./](0?[1-9]|1[0-2])(?:[-_./](?:0?[1-9]|[12]\d|3[01]))?(?!\d)/g;
+   const spanish=/(?<!\d)(?:0?[1-9]|[12]\d|3[01])[-_./](0?[1-9]|1[0-2])[-_./](20\d{2})(?!\d)/g;
+   let m;while((m=iso.exec(s)))if(Number(m[1])===year)result.add(Number(m[2]));while((m=spanish.exec(s)))if(Number(m[2])===year)result.add(Number(m[1]));return [...result]}
+  // A month in the filename or the nearest folder takes precedence; no guessing.
+  for(let i=parts.length-1;i>=0;i--){const ms=months(parts[i]);if(ms.length>1)return {year,month:null};if(ms.length===1)return {year,month:ms[0]}}
+  return {year,month:null};
+ }
  // Solo señales financieras explícitas; no deduce contenido ni reasigna correcciones manuales.
  function finance(path){const parts=path.map(norm),dirs=parts.slice(0,-1),file=(parts.at(-1)||'').replace(/[_-]+/g,' ');const dir=dirs.join(' / ').replace(/[_-]+/g,' '),joined=dir+' / '+file;
   if(/\b(facturas?|compras?|tickets?|gastos?|recibos?)\b/.test(joined))return 'compras';
@@ -68,5 +85,5 @@ window.sedeClasificar = (() => {
   if(has(file,/\bmanifiesto\b/))return 'campanas';
   return 'pendientes';
  }
- return {classify,finance,isActa};
+ return {classify,finance,isActa,invoice};
 })();
