@@ -4,6 +4,7 @@ window.sedeClasificar = (() => {
  const norm=s=>(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
  const has=(s,r)=>r.test(s);
  const stage=s=>has(s,/justificaci|memoria justificativa/)?'justificacion':has(s,/resolucion|aceptacion|concesion|anticipo/)?'resolucion':has(s,/convocatoria|\bbases\b/)?'convocatoria':has(s,/solicitud|\banexos?\b/)?'solicitud':null;
+ function isActa(name){const s=norm(name);return /(?:^|[^a-z])(actas?|reunion(?:es)?)(?=$|[^a-z])/.test(s)}
  // Solo señales financieras explícitas; no deduce contenido ni reasigna correcciones manuales.
  function finance(path){const parts=path.map(norm),dirs=parts.slice(0,-1),file=(parts.at(-1)||'').replace(/[_-]+/g,' ');const dir=dirs.join(' / ').replace(/[_-]+/g,' '),joined=dir+' / '+file;
   if(/\b(facturas?|compras?|tickets?|gastos?|recibos?)\b/.test(joined))return 'compras';
@@ -16,6 +17,7 @@ window.sedeClasificar = (() => {
  function classify(path){
   const parts=path.map(norm), dirs=parts.slice(0,-1), file=parts.at(-1)||'', all=parts.join(' / ');
   const folder=(r)=>dirs.some(x=>has(x,r));
+  if(isActa(file))return 'asambleas';
   // La ruta concreta es más fiable que una palabra suelta del nombre.
   if(folder(/cursos? .*felgtbi/))return 'cursos-felgtbi';
   if(folder(/escuela de otono.*salud|curso salud sexual.*escuela/))return 'escuela-salud';
@@ -66,5 +68,5 @@ window.sedeClasificar = (() => {
   if(has(file,/\bmanifiesto\b/))return 'campanas';
   return 'pendientes';
  }
- return {classify,finance};
+ return {classify,finance,isActa};
 })();
