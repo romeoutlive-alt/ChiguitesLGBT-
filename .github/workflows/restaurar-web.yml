@@ -1,0 +1,25 @@
+name: Restaurar web Chiguites
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/restaurar-web.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  restore:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Recuperar archivos y aplicar correcciones
+        run: |
+          git checkout 287a8e3fc76f82c5a0b2b17272b4d6d1c9429414 -- .
+          python3 .github/restaurar-web.py
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "Restaurar web y acceso a sede interna"
+          git push origin HEAD:main
