@@ -1,0 +1,18 @@
+CHIGUITES · WEB PARA GITHUB PAGES
+
+Esta copia está preparada para publicarse en:
+https://romeoutlive-alt.github.io/chiguiteslgbt-/
+
+PUBLICACIÓN
+1. Extrae el ZIP en tu ordenador.
+2. En el repositorio romeoutlive-alt/chiguiteslgbt-, abre la rama configurada para GitHub Pages (actualmente main).
+3. Sube el contenido extraído a la raíz del repositorio, conservando todas las carpetas. La raíz debe contener index.html y las carpetas assets, images, etc.; no pongas todo dentro de una carpeta adicional.
+4. Confirma los cambios y espera a que termine el despliegue de GitHub Pages. Después abre la dirección anterior y recarga la página.
+
+IMPORTANTE · FORMULARIO DE SOCIOS
+GitHub Pages no ejecuta PHP. Por eso api/socios.php no puede recibir ni enviar las solicitudes desde GitHub Pages. El formulario necesita un servidor compatible con PHP o un servicio de backend seguro y configurado antes de utilizarse. No lo pruebes con datos personales reales hasta tenerlo configurado y comprobado. Se conserva el archivo PHP original, sin afirmar que funcione en GitHub Pages.
+
+CAMBIOS
+Se han corregido las rutas del sitio, recursos y navegación para el subdirectorio /chiguiteslgbt-/. Se ha probado localmente la apertura de las seis páginas y la navegación en tamaños de móvil y ordenador.
+
+El ZIP recibido contiene una web ya compilada, no el proyecto fuente. Si se vuelve a generar la web desde el proyecto original sin configurar allí la misma ruta base, estos cambios pueden perderse. Esta copia añade en el pie un botón a la sede privada de Notion. El enlace es visible para todas las personas; el acceso al contenido lo controlan los permisos de Notion, no la web. Invita a cada administrador con su cuenta en Compartir y no publiques la página en la web. Las personas invitadas pueden heredar acceso a las subpáginas; revisa también los permisos y enlaces de documentos sensibles.
