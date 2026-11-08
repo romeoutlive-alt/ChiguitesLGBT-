@@ -4,6 +4,15 @@ window.sedeClasificar = (() => {
  const norm=s=>(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
  const has=(s,r)=>r.test(s);
  const stage=s=>has(s,/justificaci|memoria justificativa/)?'justificacion':has(s,/resolucion|aceptacion|concesion|anticipo/)?'resolucion':has(s,/convocatoria|\bbases\b/)?'convocatoria':has(s,/solicitud|\banexos?\b/)?'solicitud':null;
+ // Solo señales financieras explícitas; no deduce contenido ni reasigna correcciones manuales.
+ function finance(path){const parts=path.map(norm),dirs=parts.slice(0,-1),file=(parts.at(-1)||'').replace(/[_-]+/g,' ');const dir=dirs.join(' / ').replace(/[_-]+/g,' '),joined=dir+' / '+file;
+  if(/\b(facturas?|compras?|tickets?|gastos?|recibos?)\b/.test(joined))return 'compras';
+  if(/\b(presupuestos?|balance economico|presupuesto anual)\b/.test(joined))return 'presupuestos';
+  if(/\b(extractos? bancarios?|cuentas? bancarias?|movimientos? bancarios?|transferencias?|conciliacion bancaria|balances?)\b/.test(joined))return 'cuentas';
+  if(/\b(proveedores?)\b/.test(joined))return 'recursos';
+  if(/\b(tesoreria|contabilidad|finanzas|economia)\b/.test(dir))return 'economia';
+  return null;
+ }
  function classify(path){
   const parts=path.map(norm), dirs=parts.slice(0,-1), file=parts.at(-1)||'', all=parts.join(' / ');
   const folder=(r)=>dirs.some(x=>has(x,r));
@@ -46,6 +55,8 @@ window.sedeClasificar = (() => {
    return year?'orgullo-'+year:'orgullo';
   }
   if(folder(/^proyectos?$/))return 'otros-proyectos';
+  // En los demás casos, reconocer señales financieras antes de dejar sin clasificar.
+  const treasury=finance(path);if(treasury)return treasury;
   // Sin una carpeta reconocible, solo se usan señales precisas; lo dudoso se revisa.
   if(has(all,/solicitud sede social/))return 'sede-social';
   if(has(all,/instancias? genericas? ayuntamiento|solicitudes? ayuntamiento/))return 'registro';
@@ -55,5 +66,5 @@ window.sedeClasificar = (() => {
   if(has(file,/\bmanifiesto\b/))return 'campanas';
   return 'pendientes';
  }
- return {classify};
+ return {classify,finance};
 })();

@@ -59,6 +59,7 @@
    const existing=await window.sedeUbicaciones.read();if(serial!==generation||scan!==indexGeneration)return;
    const known=new Map(existing.map(x=>[x.drive_id,x]));await window.sedeUbicaciones.addMissing(records.filter(r=>!known.has(r.file.id)),()=>serial===generation&&scan===indexGeneration);
    const improve=records.filter(r=>{const old=known.get(r.file.id);return old&&!old.manual&&old.reglas_version<2});await window.sedeUbicaciones.improve(improve,()=>serial===generation&&scan===indexGeneration);
+   const financial=records.filter(r=>{r.financeDestination=window.sedeClasificar.finance(r.path);const old=known.get(r.file.id);return r.financeDestination&&old&&!old.manual});await window.sedeUbicaciones.finance(financial,()=>serial===generation&&scan===indexGeneration);
    if(serial!==generation||scan!==indexGeneration)return;const saved=await window.sedeUbicaciones.read();if(serial!==generation||scan!==indexGeneration)return;
    const positions=new Map(saved.map(x=>[x.drive_id,x]));for(const r of records){const position=positions.get(r.file.id);if(!position)throw new Error('not_saved');r.destination=position.carpeta_id;r.manual=position.manual;r.originalName=r.file.name;r.file.name=position.nombre_sede||r.originalName;r.hidden=!!position.oculto}
    indexRecords=records;indexState='ready';const pending=records.filter(r=>r.destination==='pendientes').length;
