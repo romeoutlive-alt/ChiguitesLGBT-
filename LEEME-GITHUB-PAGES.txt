@@ -28,3 +28,5 @@ El explorador de Drive solicita a Google permiso de solo lectura de toda la cuen
 
 ORGANIZACIÓN PROVISIONAL
 Con Drive conectado, el botón «Organizar en la sede» revisa los nombres, tipos y rutas de los archivos accesibles de Mi unidad en el navegador y propone cajones basándose en reglas de nombres. No analiza el contenido ni mueve, copia, modifica o borra los originales. Las propuestas no se guardan: hay que volver a generarlas tras desconectar o recargar, y todavía no se pueden corregir ni guardar manualmente. Puede haber errores; lo no reconocido va a Por clasificar, incluso otros archivos de la cuenta. No incluye archivos fuera de Mi unidad ni descomprime ZIP. No se ha probado con el Drive real, solo con datos ficticios; revisar especialmente información personal o de salud antes de ampliar accesos.
+
+La lista de archivos originales de Drive aparece cerrada; usa «Ver archivos originales de Drive» para abrirla o cerrarla. Los cajones de la sede siguen disponibles sin desplegar la lista.
