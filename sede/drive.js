@@ -13,7 +13,8 @@
  function clearPreview(){previewGeneration++;const d=$('file-dialog');if(d.open)d.close();$('file-content').replaceChildren();if(previewUrl){URL.revokeObjectURL(previewUrl);previewUrl=null}}
  function notify(){window.dispatchEvent(new Event('sede-drive-update'))}
  function reset(){generation++;indexGeneration++;moveGeneration++;moveRecord=null;if($('move-dialog').open)$('move-dialog').close();$('drive-originals').open=false;$('drive-originals-label').textContent='Ver archivos originales de Drive';indexState='idle';indexRecords=[];$('organize-actions').hidden=true;$('drive-index').disabled=false;$('drive-index').textContent='Actualizar archivos';$('drive-index-status').textContent='';if(controller)controller.abort();controller=null;token=null;current=[{id:'root',name:'Mi unidad'}];nextPage=null;clearPreview();items.replaceChildren();crumb.replaceChildren();body.hidden=true;disconnect.hidden=true;connect.hidden=false;connect.disabled=false;status.textContent='';notify();}
- window.sedeDrive={reset,renderRoom};
+ function counts(folders){const byId=new Map(folders.map(f=>[f.id,f])),result=new Map();for(const r of indexRecords){let id=r.destination;const seen=new Set();while(id&&byId.has(id)&&!seen.has(id)){seen.add(id);result.set(id,(result.get(id)||0)+1);id=byId.get(id).parent_id}}return result}
+ window.sedeDrive={reset,renderRoom,counts,isReady:()=>indexState==='ready'};
  function fail(text){status.textContent=text;connect.disabled=false;}
  async function api(path,options={}){const result=await fetch(API+path,{...options,headers:{...options.headers,Authorization:'Bearer '+token},cache:'no-store',signal:controller?.signal});if(result.status===401){throw new Error('expired')}if(!result.ok)throw new Error('request');return result}
  function drawCrumb(){crumb.replaceChildren();current.forEach((p,i)=>{if(i)crumb.append(e('span','','/'));const b=e('button','',p.name);b.type='button';b.addEventListener('click',()=>{current=current.slice(0,i+1);list(false)});crumb.append(b)})}
@@ -41,7 +42,8 @@
    if(serial!==generation||scan!==indexGeneration)return;
    $('drive-index-status').textContent='Recuperando y guardando las ubicaciones de la sede…';
    const existing=await window.sedeUbicaciones.read();if(serial!==generation||scan!==indexGeneration)return;
-   const known=new Set(existing.map(x=>x.drive_id));await window.sedeUbicaciones.addMissing(records.filter(r=>!known.has(r.file.id)),()=>serial===generation&&scan===indexGeneration);
+   const known=new Map(existing.map(x=>[x.drive_id,x]));await window.sedeUbicaciones.addMissing(records.filter(r=>!known.has(r.file.id)),()=>serial===generation&&scan===indexGeneration);
+   const improve=records.filter(r=>{const old=known.get(r.file.id);return old&&!old.manual&&old.reglas_version<2});await window.sedeUbicaciones.improve(improve,()=>serial===generation&&scan===indexGeneration);
    if(serial!==generation||scan!==indexGeneration)return;const saved=await window.sedeUbicaciones.read();if(serial!==generation||scan!==indexGeneration)return;
    const positions=new Map(saved.map(x=>[x.drive_id,x]));for(const r of records){const position=positions.get(r.file.id);if(!position)throw new Error('not_saved');r.destination=position.carpeta_id;r.manual=position.manual}
    indexRecords=records;indexState='ready';const pending=records.filter(r=>r.destination==='pendientes').length;
@@ -50,19 +52,25 @@
   }catch(err){if(serial!==generation||scan!==indexGeneration||err.name==='AbortError')return;indexRecords=[];indexState='error';$('drive-index').disabled=false;$('drive-index-status').textContent=err.message==='expired'?'Ha caducado la autorización de Google; desconecta y vuelve a conectar Drive.':'No se ha podido completar la carga o guardar las ubicaciones. Los cambios guardados anteriormente no se han borrado; inténtalo de nuevo.';notify()}
  }
  function renderRoom(box,ids,folders){
-  box.replaceChildren();if(!token){box.append(e('strong','','Conecta Google Drive'),e('p','','Al conectar, recuperaremos la organización guardada sin mover los archivos.'));return}
+  const wasOpen=box.querySelector('details')?.open||false,query=box.querySelector('input')?.value||'';box.replaceChildren();
+  if(!token){box.append(e('strong','','Conecta Google Drive'),e('p','','Al conectar, recuperaremos la organización guardada sin mover los archivos.'));return}
   if(indexState==='loading'){box.append(e('strong','','Cargando la organización…'),e('p','','Estamos comprobando Mi unidad y recuperando tus cajones.'));return}
   if(indexState!=='ready'){box.append(e('strong','','Organización no disponible'),e('p','','Pulsa «Actualizar archivos» en la sección de Google Drive para volver a intentarlo.'));return}
-  const records=indexRecords.filter(r=>ids.has(r.destination));box.append(e('strong','',records.length?records.length+(records.length===1?' archivo':' archivos'):'Sin archivos en este cajón'));
-  box.append(e('p','','Los archivos nuevos se clasifican por su nombre y pueden necesitar revisión. Usa «Cambiar de cajón» para corregirlos; tus cambios se guardan.'));
-  if(!records.length)return;const list=e('ul','room-files');box.append(list);let rendered=0;const labels=new Map(folders.map(f=>[f.id,f.nombre]));
-  const moreButton=e('button','drive-open','Mostrar más');moreButton.type='button';
-  function page(){for(const r of records.slice(rendered,rendered+50)){const li=row(r.file),info=e('small','room-file-origin',(r.manual?'Cajón elegido: ':'Propuesta inicial: ')+(labels.get(r.destination)||'Por clasificar')+' · Origen: '+r.path.slice(0,-1).join(' / '));li.querySelector('.drive-meta').append(info);const actions=e('div','room-actions');actions.append(li.querySelector('.drive-open'));const move=e('button','drive-open move-button','Cambiar de cajón');move.type='button';move.setAttribute('aria-label','Cambiar de cajón '+r.file.name);move.addEventListener('click',()=>openMove(r,folders));actions.append(move);li.append(actions);list.append(li)}rendered=Math.min(records.length,rendered+50);moreButton.hidden=rendered>=records.length}
-  moreButton.addEventListener('click',page);page();box.append(moreButton);
+  const records=indexRecords.filter(r=>ids.has(r.destination));box.append(e('strong','',records.length?records.length+(records.length===1?' archivo en este cajón':' archivos en este cajón'):'Sin archivos directamente en este cajón'));
+  if(!records.length){box.append(e('p','','Si hay subcarpetas, abre una para ver sus archivos.'));return}
+  box.append(e('p','','Revisa la ubicación propuesta; puedes cambiarla sin modificar Drive.'));
+  const details=e('details','room-file-details');details.open=wasOpen;const summary=e('summary','',`Ver ${records.length} ${records.length===1?'archivo':'archivos'} de este cajón`);details.append(summary);
+  const search=e('input','room-search');search.type='search';search.placeholder='Buscar por nombre en este cajón';search.setAttribute('aria-label','Buscar por nombre en este cajón');search.value=query;details.append(search);
+  const list=e('ul','room-files');details.append(list);const moreButton=e('button','drive-open','Mostrar más');moreButton.type='button';details.append(moreButton);const noResults=e('p','','No hay archivos con ese nombre en este cajón.');details.append(noResults);box.append(details);
+  const labels=new Map(folders.map(f=>[f.id,f.nombre]));let rendered=0,filtered=[];
+  const norm=s=>(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+  function page(){for(const r of filtered.slice(rendered,rendered+50)){const li=row(r.file),info=e('small','room-file-origin',(r.manual?'Cajón elegido: ':'Propuesta: ')+(labels.get(r.destination)||'Por clasificar')+' · Origen: '+r.path.slice(0,-1).join(' / '));li.querySelector('.drive-meta').append(info);const actions=e('div','room-actions');actions.append(li.querySelector('.drive-open'));const move=e('button','drive-open move-button','Cambiar de cajón');move.type='button';move.setAttribute('aria-label','Cambiar de cajón '+r.file.name);move.addEventListener('click',()=>openMove(r,folders));actions.append(move);li.append(actions);list.append(li)}rendered=Math.min(filtered.length,rendered+50);moreButton.hidden=rendered>=filtered.length;noResults.hidden=filtered.length>0}
+  function filter(){filtered=records.filter(r=>norm(r.file.name).includes(norm(search.value.trim())));list.replaceChildren();rendered=0;page()}
+  search.addEventListener('input',filter);moreButton.addEventListener('click',page);filter();
  }
  function openMove(record,folders){
   if(!token||indexState!=='ready')return;moveRecord=record;moveGeneration++;const select=$('move-folder');select.replaceChildren();$('move-filename').textContent=record.file.name;$('move-message').textContent='';$('move-save').disabled=false;
-  const byId=new Map(folders.map(f=>[f.id,f]));for(const f of folders){const names=[f.nombre],seen=new Set([f.id]);let parent=f.parent_id;while(parent&&byId.has(parent)&&!seen.has(parent)){seen.add(parent);const x=byId.get(parent);names.unshift(x.nombre);parent=x.parent_id}const option=e('option','',names.join(' › '));option.value=f.id;select.append(option)}
+  for(const root of folders.filter(f=>!f.parent_id)){const group=e('optgroup');group.label=root.nombre;const seen=new Set();function add(f,path){if(seen.has(f.id))return;seen.add(f.id);const option=e('option','',path.length?path.join(' › '):'General');option.value=f.id;group.append(option);for(const child of folders.filter(x=>x.parent_id===f.id))add(child,[...path,child.nombre])}add(root,[]);select.append(group)}
   select.value=record.destination;$('move-dialog').showModal();
  }
  function closeMove(){moveGeneration++;moveRecord=null;if($('move-dialog').open)$('move-dialog').close();$('move-message').textContent=''}

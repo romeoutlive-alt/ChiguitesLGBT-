@@ -1,46 +1,58 @@
 'use strict';
-// Propuestas locales y conservadoras basadas en nombres, nunca en contenidos.
+// Se usan solo nombres y rutas, no el contenido. La carpeta de origen manda.
 window.sedeClasificar = (() => {
- const norm = s => (s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
- const rx = (s,r) => r.test(s);
- function classify(path) {
-  const s=norm(path.join(' / '));
-  if(rx(s,/subvenci|convocatoria.*igualdad|ayudas? economica/)){
-   const years=[...s.matchAll(/\b(2015|2019|2021|2024|2025|2026)\b/g)].map(x=>x[1]);
-   if(!years.length||new Set(years).size!==1)return 'sub-otras';
-   const prefix='sub-'+years[0];
-   if(rx(s,/justificaci|memoria justificativa/))return prefix+'-justificacion';
-   if(rx(s,/resoluci[oó]n|aceptaci[oó]n|concesi[oó]n/))return prefix+'-resolucion';
-   if(rx(s,/convocatoria|\bbases\b/))return prefix+'-convocatoria';
-   if(rx(s,/solicitud|anexos?/))return prefix+'-solicitud';
-   return prefix;
+ const norm=s=>(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+ const has=(s,r)=>r.test(s);
+ const stage=s=>has(s,/justificaci|memoria justificativa/)?'justificacion':has(s,/resolucion|aceptacion|concesion|anticipo/)?'resolucion':has(s,/convocatoria|\bbases\b/)?'convocatoria':has(s,/solicitud|\banexos?\b/)?'solicitud':null;
+ function classify(path){
+  const parts=path.map(norm), dirs=parts.slice(0,-1), file=parts.at(-1)||'', all=parts.join(' / ');
+  const folder=(r)=>dirs.some(x=>has(x,r));
+  // La ruta concreta es más fiable que una palabra suelta del nombre.
+  if(folder(/cursos? .*felgtbi/))return 'cursos-felgtbi';
+  if(folder(/escuela de otono.*salud|curso salud sexual.*escuela/))return 'escuela-salud';
+  if(folder(/materiales charlas|charlas.*\beso\b|charlas diversidad/))return 'charlas';
+  if(folder(/consejo federal/))return 'consejos';
+  if(folder(/felgtbi.*(avales|ingreso)/))return 'felgtbi';
+  if(folder(/materiales de difusion/)){
+   if(has(all,/pegatinas|folletos?|codigos? qr/))return 'folletos';
+   if(has(all,/cartel/))return 'carteles';
+   return 'identidad';
   }
-  if(rx(s,/curso[s]? .*felgtbi|curso vih|curso lgtbfobia|proteccion internacional/))return 'cursos-felgtbi';
-  if(rx(s,/escuela de otono.*salud|salud sexual.*escuela de otono/))return 'escuela-salud';
-  if(rx(s,/materiales charlas|charlas diversidad|taller chiguit|charlas eso/))return 'charlas';
-  if(rx(s,/consejo federal/))return 'consejos';
-  if(rx(s,/felgtbi.*(avales|ingreso)|avales.*felgtbi/))return 'felgtbi';
-  if(rx(s,/documentos fundacionales|estatutos|reglamento/))return 'estatutos';
-  if(rx(s,/cambios? (comision ejecutiva|coordinadora)|cambio ej |cambio ejecutiva/))return 'ejecutiva';
-  if(rx(s,/solicitud sede social/))return 'sede-social';
-  if(rx(s,/politica de privacidad|proteccion de datos/))return 'privacidad';
-  if(rx(s,/carne socios|carnes socios|carne de soci/))return 'carnes';
-  if(rx(s,/palencia queerida/))return 'queerida';
-  if(rx(s,/solicitudes? concentraciones?/))return 'permisos';
-  if(rx(s,/orgullo/)){
-   const years=[...s.matchAll(/\b(2023|2024|2025)\b/g)].map(x=>x[1]);
-   return new Set(years).size===1?'orgullo-'+years[0]:'orgullo';
+  if(folder(/pruebas vih|red ?covih/))return 'pruebas';
+  if(folder(/previhene/))return 'previhene';
+  if(folder(/subvenci/)){
+   let year;for(const part of [...dirs].reverse()){const m=part.match(/\b(2015|2019|2021|2024|2025|2026)\b/);if(m){year=m[1];break}}
+   if(!year){const m=file.match(/\b(2015|2019|2021|2024|2025|2026)\b/);if(m)year=m[1]}
+   if(!year)return 'sub-otras';
+   let kind=null;for(const part of [...dirs].reverse()){kind=stage(part);if(kind)break}if(!kind)kind=stage(file);
+   return 'sub-'+year+(kind?'-'+kind:'');
   }
-  if(rx(s,/previhene/))return 'previhene';
-  if(rx(s,/pruebas vih|red ?covih/))return 'pruebas';
-  if(rx(s,/siluetas/))return 'siluetas';
-  if(rx(s,/\bimprimir\b|material para imprenta/))return 'impresion';
-  if(rx(s,/pegatinas|folletos?|codigos? qr/))return 'folletos';
-  if(rx(s,/materiales de difusion|logos de chiguites|logos de entidades|membrete de chiguit/))return 'identidad';
-  if(rx(s,/\bmanifiestos?\b/))return 'campanas';
-  if(rx(s,/solicitudes? ayuntamiento|instancias? genericas? ayuntamiento/))return 'registro';
-  if(rx(s,/protocolos? secretaria/))return 'altas';
-  if(rx(s,/\bcompras\b|\bfacturas\b/))return 'compras';
+  if(folder(/documentos fundacionales/)){
+   if(has(all,/inscripci|registro|certificado|\bnif\b|\bcif\b/))return 'registro';
+   if(has(all,/estatutos?|reglamento/))return 'estatutos';
+   return 'gobierno';
+  }
+  if(folder(/cambios? (comision ejecutiva|coordinadora)/))return 'ejecutiva';
+  if(folder(/carne.*soci/))return 'carnes';
+  if(folder(/solicitud.*sede social/))return 'sede-social';
+  if(folder(/solicitudes? concentraciones?/))return 'permisos';
+  if(folder(/palencia queerida/))return 'queerida';
+  if(folder(/manifiestos?|17.d.*documental/))return 'campanas';
+  if(folder(/^dsgf\b/))return 'guias';
+  if(folder(/^siluetas\b/))return 'siluetas';
+  if(folder(/^imprimir\b|material para imprenta/))return 'impresion';
+  if(folder(/orgullo/)){
+   let year;for(const part of [...dirs].reverse()){const m=part.match(/\b(2023|2024|2025)\b/);if(m){year=m[1];break}}
+   return year?'orgullo-'+year:'orgullo';
+  }
+  if(folder(/^proyectos?$/))return 'otros-proyectos';
+  // Sin una carpeta reconocible, solo se usan señales precisas; lo dudoso se revisa.
+  if(has(all,/solicitud sede social/))return 'sede-social';
+  if(has(all,/instancias? genericas? ayuntamiento|solicitudes? ayuntamiento/))return 'registro';
+  if(has(all,/protocolos? secretaria/))return 'altas';
+  if(has(all,/politica de privacidad|proteccion de datos/))return 'privacidad';
+  if(has(file,/\bestatutos?\b|reglamento interno/))return 'estatutos';
+  if(has(file,/\bmanifiesto\b/))return 'campanas';
   return 'pendientes';
  }
  return {classify};
