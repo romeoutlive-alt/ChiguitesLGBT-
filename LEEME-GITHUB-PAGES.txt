@@ -15,4 +15,9 @@ GitHub Pages no ejecuta PHP. Por eso api/socios.php no puede recibir ni enviar l
 CAMBIOS
 Se han corregido las rutas del sitio, recursos y navegación para el subdirectorio /chiguiteslgbt-/. Se ha probado localmente la apertura de las seis páginas y la navegación en tamaños de móvil y ordenador.
 
-El ZIP recibido contiene una web ya compilada, no el proyecto fuente. Si se vuelve a generar la web desde el proyecto original sin configurar allí la misma ruta base, estos cambios pueden perderse. Esta copia añade en el pie un botón a la sede privada de Notion. El enlace es visible para todas las personas; el acceso al contenido lo controlan los permisos de Notion, no la web. Invita a cada administrador con su cuenta en Compartir y no publiques la página en la web. Las personas invitadas pueden heredar acceso a las subpáginas; revisa también los permisos y enlaces de documentos sensibles.
+El ZIP recibido contiene una web ya compilada, no el proyecto fuente. Si se vuelve a generar la web desde el proyecto original sin configurar allí la misma ruta base, estos cambios pueden perderse.
+
+SEDE INTERNA
+El botón del pie abre /sede/ en esta misma web. El acceso utiliza Supabase Auth y una lista de cuentas autorizadas en la tabla sede_accesos, protegida con RLS. La clave publicable de proyecto es pública por diseño y no concede acceso administrativo; nunca subas contraseñas o claves secretas al repositorio.
+
+Solo se ha autorizado la cuenta de coordinación. Las salas son una primera versión visual: todavía no permiten guardar o consultar documentos y no se han importado archivos desde Notion o Drive. Antes de trabajar con información personal, hay que implementar y probar almacenamiento privado, permisos específicos y copias de seguridad. GitHub Pages es público; no pongas documentos privados en el repositorio. Para recuperar o cambiar la contraseña, usa las herramientas de Supabase; no se ha conectado aún un formulario de recuperación.
