@@ -5,6 +5,8 @@ window.sedeClasificar = (() => {
  const has=(s,r)=>r.test(s);
  const stage=s=>has(s,/justificaci|memoria justificativa/)?'justificacion':has(s,/resolucion|aceptacion|concesion|anticipo/)?'resolucion':has(s,/convocatoria|\bbases\b/)?'convocatoria':has(s,/solicitud|\banexos?\b/)?'solicitud':null;
  function isActa(name){const s=norm(name);return /(?:^|[^a-z])(actas?|reunion(?:es)?)(?=$|[^a-z])/.test(s)}
+ // El año más cercano al archivo; si contiene varios años, no adivinamos.
+ function yearFor(path){for(let i=path.length-1;i>=0;i--){const years=[...new Set((norm(path[i]).match(/(?<![0-9])(?:19|20)\d{2}(?![0-9])/g)||[]).map(Number))];if(years.length>1)return null;if(years.length===1)return years[0]}return null}
  // Fechas reconocibles en nombre/ruta, no fechas de subida ni contenido.
  function invoice(path){
   if(!Array.isArray(path)||!path.length||isActa(path.at(-1)))return null;
@@ -85,5 +87,5 @@ window.sedeClasificar = (() => {
   if(has(file,/\bmanifiesto\b/))return 'campanas';
   return 'pendientes';
  }
- return {classify,finance,isActa,invoice};
+ return {classify,finance,isActa,invoice,yearFor};
 })();

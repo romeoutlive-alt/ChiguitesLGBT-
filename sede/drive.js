@@ -64,9 +64,12 @@
    const snapshot=new Map(saved.map(x=>[x.drive_id,x]));const actas=records.filter(r=>{r.position=snapshot.get(r.file.id);return r.position&&!r.position.acta_procesada&&(window.sedeClasificar.isActa(r.file.name)||window.sedeClasificar.isActa(r.position.nombre_sede||''))});
    await window.sedeUbicaciones.actas(actas,()=>serial===generation&&scan===indexGeneration);if(serial!==generation||scan!==indexGeneration)return;
    if(actas.length)saved=await window.sedeUbicaciones.read();if(serial!==generation||scan!==indexGeneration)return;
+   const yearSnapshot=new Map(saved.map(x=>[x.drive_id,x]));const actasAnio=records.filter(r=>{r.position=yearSnapshot.get(r.file.id);r.actaYear=window.sedeClasificar.yearFor([...r.path,r.position?.nombre_sede||'']);return r.position&&r.position.carpeta_id==='asambleas'&&!r.position.acta_anio_procesada&&(window.sedeClasificar.isActa(r.file.name)||window.sedeClasificar.isActa(r.position.nombre_sede||''))});
+   await window.sedeUbicaciones.actasPorAnio(actasAnio,()=>serial===generation&&scan===indexGeneration);if(serial!==generation||scan!==indexGeneration)return;
+   if(actasAnio.length)saved=await window.sedeUbicaciones.read();if(serial!==generation||scan!==indexGeneration)return;
    const invoiceSnapshot=new Map(saved.map(x=>[x.drive_id,x]));const facturas=records.filter(r=>{r.position=invoiceSnapshot.get(r.file.id);r.invoice=window.sedeClasificar.invoice(r.path);return r.invoice&&r.position&&!r.position.factura_procesada&&!window.sedeClasificar.isActa(r.file.name)&&!window.sedeClasificar.isActa(r.position.nombre_sede||'')});
    await window.sedeUbicaciones.facturas(facturas,()=>serial===generation&&scan===indexGeneration);if(serial!==generation||scan!==indexGeneration)return;
-   if(facturas.length){saved=await window.sedeUbicaciones.read();await window.sedeRefreshFolders();}if(serial!==generation||scan!==indexGeneration)return;
+   if(facturas.length)saved=await window.sedeUbicaciones.read();if(facturas.length||actasAnio.length)await window.sedeRefreshFolders();if(serial!==generation||scan!==indexGeneration)return;
    const positions=new Map(saved.map(x=>[x.drive_id,x]));for(const r of records){const position=positions.get(r.file.id);if(!position)throw new Error('not_saved');r.destination=position.carpeta_id;r.manual=position.manual;r.originalName=r.file.name;r.file.name=position.nombre_sede||r.originalName;r.hidden=!!position.oculto}
    indexRecords=records;indexState='ready';const pending=records.filter(r=>r.destination==='pendientes').length;
    $('drive-index-status').textContent='Organización guardada: '+records.length+' archivos de Mi unidad; '+pending+' en «Por clasificar».';
