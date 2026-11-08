@@ -69,7 +69,10 @@
    if(actasAnio.length)saved=await window.sedeUbicaciones.read();if(serial!==generation||scan!==indexGeneration)return;
    const invoiceSnapshot=new Map(saved.map(x=>[x.drive_id,x]));const facturas=records.filter(r=>{r.position=invoiceSnapshot.get(r.file.id);r.invoice=window.sedeClasificar.invoice(r.path);return r.invoice&&r.position&&!r.position.factura_procesada&&!window.sedeClasificar.isActa(r.file.name)&&!window.sedeClasificar.isActa(r.position.nombre_sede||'')});
    await window.sedeUbicaciones.facturas(facturas,()=>serial===generation&&scan===indexGeneration);if(serial!==generation||scan!==indexGeneration)return;
-   if(facturas.length)saved=await window.sedeUbicaciones.read();if(facturas.length||actasAnio.length)await window.sedeRefreshFolders();if(serial!==generation||scan!==indexGeneration)return;
+   if(facturas.length)saved=await window.sedeUbicaciones.read();if(serial!==generation||scan!==indexGeneration)return;
+   const rootSnapshot=new Map(saved.map(x=>[x.drive_id,x]));const rootFinance=records.filter(r=>{const old=rootSnapshot.get(r.file.id);r.rootFinanceDestination=window.sedeClasificar.finance([r.file.name]);return old&&old.carpeta_id==='economia'&&!old.manual&&!window.sedeClasificar.isActa(r.file.name)&&!window.sedeClasificar.isActa(old.nombre_sede||'')&&['compras','cuentas','presupuestos','recursos'].includes(r.rootFinanceDestination)});
+   await window.sedeUbicaciones.financeRoot(rootFinance,()=>serial===generation&&scan===indexGeneration);if(serial!==generation||scan!==indexGeneration)return;
+   if(rootFinance.length)saved=await window.sedeUbicaciones.read();if(facturas.length||actasAnio.length)await window.sedeRefreshFolders();if(serial!==generation||scan!==indexGeneration)return;
    const positions=new Map(saved.map(x=>[x.drive_id,x]));for(const r of records){const position=positions.get(r.file.id);if(!position)throw new Error('not_saved');r.destination=position.carpeta_id;r.manual=position.manual;r.originalName=r.file.name;r.file.name=position.nombre_sede||r.originalName;r.hidden=!!position.oculto}
    indexRecords=records;indexState='ready';const pending=records.filter(r=>r.destination==='pendientes').length;
    $('drive-index-status').textContent='Organización guardada: '+records.length+' archivos de Mi unidad; '+pending+' en «Por clasificar».';
@@ -77,14 +80,14 @@
   }catch(err){if(serial!==generation||scan!==indexGeneration||err.name==='AbortError')return;indexRecords=[];indexState='error';$('drive-index').disabled=false;$('drive-index-status').textContent=err.message==='expired'?'Ha caducado la autorización de Google; desconecta y vuelve a conectar Drive.':'No se ha podido completar la carga o guardar las ubicaciones. Los cambios guardados anteriormente no se han borrado; inténtalo de nuevo.';notify()}
  }
  function renderRoom(box,ids,folders,showHidden=false){
-  clearThumbs();const wasOpen=box.querySelector('details')?.open||false,query=box.querySelector('input')?.value||'';box.replaceChildren();
+  clearThumbs();const query=box.querySelector('input')?.value||'';box.replaceChildren();
   if(!token){box.append(e('strong','','Conecta Google Drive'),e('p','','Al conectar, recuperaremos la organización guardada sin mover los archivos.'));return}
   if(indexState==='loading'){box.append(e('strong','','Cargando la organización…'),e('p','','Estamos comprobando Mi unidad y recuperando tus cajones.'));return}
   if(indexState!=='ready'){box.append(e('strong','','Organización no disponible'),e('p','','Pulsa «Actualizar archivos» en la sección de Google Drive para volver a intentarlo.'));return}
   const records=indexRecords.filter(r=>ids.has(r.destination)&&(showHidden||!r.hidden));box.append(e('strong','',records.length?records.length+(records.length===1?' archivo en este cajón':' archivos en este cajón'):'Sin archivos directamente en este cajón'));
   if(!records.length){box.append(e('p','','Si hay subcarpetas, abre una para ver sus archivos.'));return}
   box.append(e('p','','Revisa la ubicación propuesta; puedes cambiarla sin modificar Drive.'));
-  const details=e('details','room-file-details');details.open=wasOpen;const summary=e('summary','',`Ver ${records.length} ${records.length===1?'archivo':'archivos'} de este cajón`);details.append(summary);
+  const details=e('div','room-file-list');
   const search=e('input','room-search');search.type='search';search.placeholder='Buscar por nombre en este cajón';search.setAttribute('aria-label','Buscar por nombre en este cajón');search.value=query;details.append(search);
   const list=e('ul','room-files');details.append(list);const moreButton=e('button','drive-open','Mostrar más');moreButton.type='button';details.append(moreButton);const noResults=e('p','','No hay archivos con ese nombre en este cajón.');details.append(noResults);box.append(details);
   const labels=new Map(folders.map(f=>[f.id,window.sedeFolderName(f)]));let rendered=0,filtered=[];
