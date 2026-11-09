@@ -6,7 +6,7 @@ const $=id=>document.getElementById(id);
 const login=$('login-view'),dashboard=$('dashboard'),message=$('login-message');
 // En móvil el título queda junto a los cajones; en escritorio ocupa el hueco bajo el aviso.
 const compactLayout=window.matchMedia('(max-width: 800px)');
-function positionAreasHeading(){const heading=$('areas-heading');if(compactLayout.matches)$('rooms').before(heading);else $('dash-intro').append(heading)}
+function positionAreasHeading(){const heading=$('areas-heading');$('rooms').before(heading)}
 compactLayout.addEventListener('change',positionAreasHeading);positionAreasHeading();
 let client,folders=[],selectedFolder=null,groupMode=false,showHidden=false;
 function showLogin(text=''){selectedFolder=null;groupMode=false;showHidden=false;window.sedeDrive?.reset();$('drive-panel').hidden=true;dashboard.hidden=true;login.hidden=false;message.textContent=text;folders=[];}

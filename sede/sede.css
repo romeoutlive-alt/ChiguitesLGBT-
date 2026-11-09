@@ -100,3 +100,14 @@ body::before{content:"";position:fixed;inset:-24%;z-index:-1;pointer-events:none
 .dash-top .section-head{max-width:none;margin:0;padding:25px 0 0}
 .dash-top .section-head h2{margin:0}
 @media(max-width:800px){.dash-top{padding-bottom:10px}#dashboard>.section-head{padding-top:18px;padding-bottom:12px}}
+
+/* Cabecera compacta, aviso cálido y franja SEDE INTERNA a todo el ancho */
+.dash-top{padding-top:14px}
+.dash-top .eyebrow{margin-top:0}
+.dash-top h1{margin:12px 0 14px}
+.dash-top .notice{background:#fdf0e4;border-left:4px solid #ec9a76;border-radius:6px}
+.dash-top .notice>span{color:#d9714c}
+#dashboard>#areas-heading{max-width:none;margin:8px 0 22px;padding:0;background:linear-gradient(90deg,#fde4d4,#f6ecd9 45%,#dcefe6);border-top:1px solid #f0dccd;border-bottom:1px solid #d9e9df}
+#dashboard>#areas-heading>div{max-width:1270px;margin:0 auto;padding:11px 6%;box-sizing:border-box}
+#dashboard>#areas-heading h2{margin:0;font-size:15px;letter-spacing:.16em;font-weight:800;color:#3a2b3f}
+@media(max-width:800px){.dash-top{padding-top:12px}#dashboard>#areas-heading>div{padding:10px 20px}#dashboard>#areas-heading{margin:4px 0 16px}}
