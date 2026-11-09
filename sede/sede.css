@@ -62,3 +62,31 @@ body::before{content:"";position:fixed;inset:-24%;z-index:-1;pointer-events:none
 @media(prefers-reduced-motion:reduce){.room,.folder-card{transition:none}.room:hover,.folder-card:hover{transform:none}}
 
 .folder-copy strong{color:#292137}.folder-copy small{font-weight:400;color:#625a68}
+
+/* Cabecera compacta: Drive al lado del título, no entre los espacios. */
+.dash-top{display:grid;grid-template-columns:minmax(0,1fr) minmax(290px,370px);gap:36px;align-items:start;padding-top:42px;padding-bottom:28px}
+.dash-top>div:first-child{min-width:0}
+.dash-side{display:flex;flex-direction:column;align-items:stretch;gap:20px;min-width:0}
+.dash-side .account{justify-content:flex-end}
+.dash-side .drive-panel{width:100%;max-width:none;margin:0;padding:22px;border-radius:14px}
+.dash-side .drive-head{display:block}
+.dash-side .drive-head h2{font-size:24px}
+.dash-side .drive-head p:not(.eyebrow){font-size:14px;line-height:1.45;margin:8px 0 0}
+.dash-side .drive-actions{margin-top:16px}
+.dash-side .drive-info{border-top:1px solid #e7dfe5;margin-top:16px;padding-top:10px}
+.dash-side .drive-info summary{cursor:pointer;color:#4c317e;font-weight:700;font-size:13px;min-height:32px;padding:6px 0}
+.dash-side .drive-permission{border:0;padding:0;margin:8px 0;font-size:13px}
+.dash-side .organize-action{margin-top:10px;padding-top:12px}
+.dash-side .organize-action p{font-size:12px;line-height:1.4}
+.dash-side .drive-status{font-size:12px;line-height:1.4;margin:8px 0 0}
+.dash-side .drive-status:empty{display:none}
+.dash-side .drive-originals{margin-top:12px;padding-top:8px}
+.dash-side .drive-originals summary{font-size:13px}
+.dash-side .drive-items{grid-template-columns:1fr;max-height:280px;overflow-y:auto}
+.dash-side .drive-items .drive-row{display:flex;flex-direction:row;align-items:center;flex-wrap:wrap}
+.dash-side .drive-items .drive-meta{width:auto;min-width:0}
+.dash-side .drive-items .drive-open{width:auto;margin:0}
+@media(max-width:800px){.dash-top{display:flex;flex-direction:column;gap:18px;padding-top:32px;padding-bottom:22px}.dash-side{width:100%;gap:12px}.dash-side .account{justify-content:flex-start;margin-top:0}.dash-side .drive-panel{margin:0;padding:18px}.dash-side .drive-head h2{font-size:21px}.dash-side .drive-actions{margin-top:12px}}
+.dash-side .drive-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.dash-side .organize-action{border:0;margin:0;padding:0}
+.dash-side .drive-actions .subtle{font-size:13px;min-height:44px;padding:9px 12px}
