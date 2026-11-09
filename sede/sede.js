@@ -13,7 +13,7 @@ function showLogin(text=''){selectedFolder=null;groupMode=false;showHidden=false
 function el(tag,cls,text){const n=document.createElement(tag);if(cls)n.className=cls;if(text!==undefined)n.textContent=text;return n;}
 function folderName(f){return f.nombre_sede||f.nombre} window.sedeFolderName=folderName;
 function isFolderHidden(id){const seen=new Set();let f=folders.find(x=>x.id===id);while(f&&!seen.has(f.id)){if(f.oculta)return true;seen.add(f.id);f=folders.find(x=>x.id===f.parent_id)}return false}
-function children(id){return folders.filter(f=>f.parent_id===id);}
+function children(id){const list=folders.filter(f=>f.parent_id===id);const yr=f=>{const m=String(f.nombre_sede||f.nombre||'').match(/\b(19|20)\d{2}\b/);return m&&!/\b(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)\b/i.test(f.nombre_sede||f.nombre||'')?+m[0]:null};if(list.filter(f=>yr(f)!==null).length<2)return list;return list.map((f,i)=>({f,i,y:yr(f)})).sort((a,b)=>(a.y===null)-(b.y===null)||(b.y||0)-(a.y||0)||a.i-b.i).map(x=>x.f);}
 function groupName(f){return window.sedeDrive?.directGroup(f.id,showHidden).name||folderName(f)}
 function cardContent(b,f,title,desc,arrow){if(window.sedeArt)b.append(window.sedeArt(f,folders));const copy=el('span','folder-copy');copy.append(el('strong','',title),el('small','',desc||''),el('span','arrow',arrow));b.append(copy)}
 function folderButton(f,isRoot){const b=el('button',isRoot?'room':'folder-card');b.type='button';b.dataset.folderId=f.id;cardContent(b,f,folderName(f)+(f.oculta?' (oculta)':''),f.descripcion,children(f.id).length?`${children(f.id).length} carpetas · Explorar →`:'Abrir →');b.addEventListener('click',()=>renderFolder(f.id));return b;}
