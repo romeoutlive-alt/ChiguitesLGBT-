@@ -107,8 +107,9 @@
  }
  function openMove(record,folders){
   if(!token||indexState!=='ready')return;moveRecord=record;moveGeneration++;const select=$('move-folder');select.replaceChildren();$('move-filename').textContent=record.file.name;$('move-message').textContent='';$('move-save').disabled=false;
-  for(const root of folders.filter(f=>!f.parent_id)){const group=e('optgroup');group.label=window.sedeFolderName(root)+(root.oculta?' (oculto)':'');const seen=new Set();function add(f,path,hidden){if(seen.has(f.id))return;seen.add(f.id);hidden=hidden||!!f.oculta;const option=e('option','',(path.length?path.join(' › '):'General')+(hidden?' (oculto)':''));option.value=f.id;group.append(option);for(const child of folders.filter(x=>x.parent_id===f.id))add(child,[...path,window.sedeFolderName(child)],hidden)}add(root,[],false);select.append(group)}
-  select.value=record.destination;$('move-dialog').showModal();
+  const placeholder=e('option','','Selecciona un cajón');placeholder.value='';placeholder.disabled=true;select.append(placeholder);
+  for(const root of folders.filter(f=>!f.parent_id&&!f.oculta)){const group=e('optgroup');group.label=window.sedeFolderName(root);const seen=new Set();function add(f,path){if(seen.has(f.id)||f.oculta)return;seen.add(f.id);const option=e('option','',path.length?path.join(' › '):'General');option.value=f.id;group.append(option);for(const child of folders.filter(x=>x.parent_id===f.id))add(child,[...path,window.sedeFolderName(child)])}add(root,[]);if(group.children.length)select.append(group)}
+  select.value=[...select.options].some(o=>o.value===record.destination&&!o.disabled)?record.destination:'';if(select.options.length===1){$('move-save').disabled=true;$('move-message').textContent='No hay cajones visibles. Recupera uno para poder mover el archivo.'}$('move-dialog').showModal();
  }
  function closeMove(){moveGeneration++;moveRecord=null;if($('move-dialog').open)$('move-dialog').close();$('move-message').textContent=''}
  $('move-close').addEventListener('click',closeMove);$('move-dialog').addEventListener('cancel',ev=>{ev.preventDefault();closeMove()});
