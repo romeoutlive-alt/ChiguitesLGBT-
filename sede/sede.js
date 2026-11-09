@@ -4,6 +4,10 @@ const PROJECT_URL='https://eraajrwmbyqsenuraebd.supabase.co';
 const PUBLISHABLE_KEY='sb_publishable_yxMU7HhJJUEvkaj-GnIRTg_o6-1crKm';
 const $=id=>document.getElementById(id);
 const login=$('login-view'),dashboard=$('dashboard'),message=$('login-message');
+// En móvil el título queda junto a los cajones; en escritorio ocupa el hueco bajo el aviso.
+const compactLayout=window.matchMedia('(max-width: 800px)');
+function positionAreasHeading(){const heading=$('areas-heading');if(compactLayout.matches)$('rooms').before(heading);else $('dash-intro').append(heading)}
+compactLayout.addEventListener('change',positionAreasHeading);positionAreasHeading();
 let client,folders=[],selectedFolder=null,groupMode=false,showHidden=false;
 function showLogin(text=''){selectedFolder=null;groupMode=false;showHidden=false;window.sedeDrive?.reset();$('drive-panel').hidden=true;dashboard.hidden=true;login.hidden=false;message.textContent=text;folders=[];}
 function el(tag,cls,text){const n=document.createElement(tag);if(cls)n.className=cls;if(text!==undefined)n.textContent=text;return n;}

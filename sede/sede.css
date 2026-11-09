@@ -95,3 +95,8 @@ body::before{content:"";position:fixed;inset:-24%;z-index:-1;pointer-events:none
 .dash-top .notice{max-width:600px;margin:25px 0 0;padding:13px 16px;gap:10px;align-items:flex-start;font-size:13px;line-height:1.45}
 .dash-top .notice>span{font-size:19px;line-height:1.1}
 @media(max-width:800px){.dash-top .notice{margin:20px 0 0}}
+/* Acercar los cajones a la cabecera sin dejar un bloque vacío. */
+.dash-top{padding-bottom:10px}
+.dash-top .section-head{max-width:none;margin:0;padding:25px 0 0}
+.dash-top .section-head h2{margin:0}
+@media(max-width:800px){.dash-top{padding-bottom:10px}#dashboard>.section-head{padding-top:18px;padding-bottom:12px}}
